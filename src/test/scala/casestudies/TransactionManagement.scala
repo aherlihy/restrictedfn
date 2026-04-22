@@ -31,15 +31,15 @@ type ScheduleConnective[RQT <: Tuple] =
   RestrictedSelectable.CustomConnective[RQT, Multiplicity.Unrestricted, Multiplicity.Affine]
 
 object ScheduleConnective:
-  def apply[RQT <: Tuple](values: RQT) =
+  def apply[K, RQT <: Tuple](values: RQT) =
     RestrictedSelectable.CustomConnective[RQT, Multiplicity.Unrestricted, Multiplicity.Affine](values)
 
 object TxnDSL:
-  def schedule[RT <: Tuple, RQT <: Tuple](
+  def schedule[K, RT <: Tuple, RQT <: Tuple](
     resources: RT
-  )(fns: RestrictedSelectable.RestrictedFn.RestrictedFn[RT, ScheduleConnective[RQT]])(
+  )(fns: RestrictedSelectable.RestrictedFn.RestrictedFn[K, RT, ScheduleConnective[RQT]])(
     using
-      builder: RestrictedSelectable.RestrictedFn.RestrictedFnBuilder[RT, ScheduleConnective[RQT]]
+      builder: RestrictedSelectable.RestrictedFn.RestrictedFnBuilder[K, RT, ScheduleConnective[RQT]]
   ): RestrictedSelectable.ExtractResultTypes[RQT] =
     builder.execute(fns)(resources)
 

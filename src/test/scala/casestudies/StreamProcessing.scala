@@ -31,15 +31,15 @@ type RouteConnective[RQT <: Tuple] =
   RestrictedSelectable.CustomConnective[RQT, Multiplicity.Unrestricted, Multiplicity.Relevant]
 
 object RouteConnective:
-  def apply[RQT <: Tuple](values: RQT) =
+  def apply[K, RQT <: Tuple](values: RQT) =
     RestrictedSelectable.CustomConnective[RQT, Multiplicity.Unrestricted, Multiplicity.Relevant](values)
 
 object StreamDSL:
-  def route[ST <: Tuple, RQT <: Tuple](
+  def route[K, ST <: Tuple, RQT <: Tuple](
     streams: ST
-  )(fns: RestrictedSelectable.RestrictedFn.RestrictedFn[ST, RouteConnective[RQT]])(
+  )(fns: RestrictedSelectable.RestrictedFn.RestrictedFn[K, ST, RouteConnective[RQT]])(
     using
-      builder: RestrictedSelectable.RestrictedFn.RestrictedFnBuilder[ST, RouteConnective[RQT]]
+      builder: RestrictedSelectable.RestrictedFn.RestrictedFnBuilder[K, ST, RouteConnective[RQT]]
   ): RestrictedSelectable.ExtractResultTypes[RQT] =
     builder.execute(fns)(streams)
 

@@ -170,124 +170,124 @@ object ForEachAffineForAllRelevantConnective:
 
 type ForEachRelevantForAllRelevantConnective[RT <: Tuple] = CustomConnective[RT, Multiplicity.Relevant, Multiplicity.Relevant]
 object ForEachRelevantForAllRelevantConnective:
-  def apply[RT <: Tuple](values: RT): ForEachRelevantForAllRelevantConnective[RT] =
+  def apply[K, RT <: Tuple](values: RT): ForEachRelevantForAllRelevantConnective[RT] =
     CustomConnective[RT, Multiplicity.Relevant, Multiplicity.Relevant](values)
 
 object ProductConnectiveFns:
-  def forAllLinearFn[QT <: Tuple, RT <: Tuple](
+  def forAllLinearFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForAllLinearConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForAllLinearConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForAllLinearConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachLinearFn[QT <: Tuple, RT <: Tuple](
+  def forEachLinearFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachLinearConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachLinearConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachLinearConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forAllAffineFn[QT <: Tuple, RT <: Tuple](
+  def forAllAffineFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForAllAffineConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForAllAffineConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForAllAffineConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachAffineFn[QT <: Tuple, RT <: Tuple](
+  def forEachAffineFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachAffineConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachAffineConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachAffineConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forAllRelevantFn[QT <: Tuple, RT <: Tuple](
+  def forAllRelevantFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForAllRelevantConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForAllRelevantConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForAllRelevantConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachRelevantFn[QT <: Tuple, RT <: Tuple](
+  def forEachRelevantFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachRelevantConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachRelevantConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachRelevantConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachAffineForAllLinearFn[QT <: Tuple, RT <: Tuple](
+  def forEachAffineForAllLinearFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachAffineForAllLinearConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachAffineForAllLinearConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachAffineForAllLinearConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachLinearForAllAffineFn[QT <: Tuple, RT <: Tuple](
+  def forEachLinearForAllAffineFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachLinearForAllAffineConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachLinearForAllAffineConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachLinearForAllAffineConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachAffineForAllAffineFn[QT <: Tuple, RT <: Tuple](
+  def forEachAffineForAllAffineFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachAffineForAllAffineConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachAffineForAllAffineConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachAffineForAllAffineConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachLinearForAllRelevantFn[QT <: Tuple, RT <: Tuple](
+  def forEachLinearForAllRelevantFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachLinearForAllRelevantConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachLinearForAllRelevantConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachLinearForAllRelevantConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachAffineForAllRelevantFn[QT <: Tuple, RT <: Tuple](
+  def forEachAffineForAllRelevantFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachAffineForAllRelevantConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachAffineForAllRelevantConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachAffineForAllRelevantConnective[RT]
     ]
   ): ExtractResultTypes[RT] =
     builder.execute(fns)(bases)
 
-  def forEachRelevantForAllRelevantFn[QT <: Tuple, RT <: Tuple](
+  def forEachRelevantForAllRelevantFn[K, QT <: Tuple, RT <: Tuple](
     bases: QT
-  )(fns: RestrictedFn.RestrictedFn[QT, ForEachRelevantForAllRelevantConnective[RT]])(
-    using builder: RestrictedFn.RestrictedFnBuilder[
+  )(fns: RestrictedFn.RestrictedFn[K, QT, ForEachRelevantForAllRelevantConnective[RT]])(
+    using builder: RestrictedFn.RestrictedFnBuilder[K,
       QT,
       ForEachRelevantForAllRelevantConnective[RT]
     ]

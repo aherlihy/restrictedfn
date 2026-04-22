@@ -33,15 +33,15 @@ type BranchConnective[RQT <: Tuple] =
   RestrictedSelectable.CustomConnective[RQT, Multiplicity.Linear, Multiplicity.Unrestricted]
 
 object BranchConnective:
-  def apply[RQT <: Tuple](values: RQT) =
+  def apply[K, RQT <: Tuple](values: RQT) =
     RestrictedSelectable.CustomConnective[RQT, Multiplicity.Linear, Multiplicity.Unrestricted](values)
 
 object QuantumDSL:
-  def condBranch[QT <: Tuple, RQT <: Tuple](
+  def condBranch[K, QT <: Tuple, RQT <: Tuple](
     qubits: QT
-  )(fns: RestrictedSelectable.RestrictedFn.RestrictedFn[QT, BranchConnective[RQT]])(
+  )(fns: RestrictedSelectable.RestrictedFn.RestrictedFn[K, QT, BranchConnective[RQT]])(
     using
-      builder: RestrictedSelectable.RestrictedFn.RestrictedFnBuilder[QT, BranchConnective[RQT]]
+      builder: RestrictedSelectable.RestrictedFn.RestrictedFnBuilder[K, QT, BranchConnective[RQT]]
   ): RestrictedSelectable.ExtractResultTypes[RQT] =
     builder.execute(fns)(qubits)
 

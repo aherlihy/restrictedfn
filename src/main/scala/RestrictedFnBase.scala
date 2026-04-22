@@ -92,6 +92,11 @@ abstract class RestrictedFnBase:
     case (elem, index) => Restricted[elem, Tuple1[index]]
   ]
 
+  // κ-tagged variant: each index is intersected with K
+  type ToRestrictedRefK[AT <: Tuple, K] = Tuple.Map[ZipWithIndex[AT], [T] =>> T match
+    case (elem, index) => Restricted[elem, Tuple1[index & K]]
+  ]
+
   // Used to construct the Restricted types returned by the function
   // RT is the return tuple, DT is the tuple of dependency tuples
   type ToRestricted[RT <: Tuple, DT <: Tuple] =
@@ -212,6 +217,39 @@ abstract class RestrictedFnBase:
     case (false, false) => true
 
   // ============================================================================
+  // κ-tagged variants: indices become `index & K`
+  // ============================================================================
+
+  type GenerateIndicesK[N <: Int, Size <: Int, K] <: Tuple = N match
+    case Size => EmptyTuple
+    case _ => (N & K) *: GenerateIndicesK[compiletime.ops.int.S[N], Size, K]
+
+  type CheckForAllK[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
+    case Multiplicity.Linear =>
+      (CheckRelevant[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT]],
+       CheckAffine[FlattenAllDependencies[RQT]])
+    case Multiplicity.Affine =>
+      CheckAffine[FlattenAllDependencies[RQT]]
+    case Multiplicity.Relevant =>
+      CheckRelevant[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT]]
+    case Multiplicity.Unrestricted => true
+
+  type CheckForEachK[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
+    case Multiplicity.Linear =>
+      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], true, true]
+    case Multiplicity.Affine =>
+      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], false, true]
+    case Multiplicity.Relevant =>
+      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], true, false]
+    case Multiplicity.Unrestricted => true
+
+  type CheckForAllMultiplicityK[ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] =
+    CheckForAllK[ForAllM, K, AT, RQT]
+
+  type CheckForEachMultiplicityK[ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] =
+    CheckForEachK[ForEachM, K, AT, RQT]
+
+  // ============================================================================
   // Top-level constraint checks with error messages
   // ============================================================================
 
@@ -249,32 +287,32 @@ abstract class RestrictedFnBase:
      * This is the library's contribution - a clean name for linear functions
      * that take restricted references and return a ComposedConnective.
      */
-    type RestrictedFn[AT <: Tuple, RQT] = ToRestrictedRef[AT] => RQT
+    type RestrictedFn[K, AT <: Tuple, RQT] = ToRestrictedRefK[AT, K] => RQT
 
     type ExtractReturnType[Connective] = Connective match
       case CustomConnective[rqt, forEachM, forAllM] =>
         ExtractResultTypes[rqt]
 
-    trait RestrictedFnBuilder[AT <: Tuple, Connective]:
-      def execute(fns: RestrictedFn[AT, Connective])(args: AT): ExtractReturnType[Connective]
+    trait RestrictedFnBuilder[K, AT <: Tuple, Connective]:
+      def execute(fns: RestrictedFn[K, AT, Connective])(args: AT): ExtractReturnType[Connective]
 
     object RestrictedFnBuilder:
       // Builder for ComposedConnective - enforces custom connective constraints
       given connectiveBuilder[
-        AT <: Tuple,    // args types
-        RQT <: Tuple,   // return types (restricted)
+        K,
+        AT <: Tuple,
+        RQT <: Tuple,
         ForEachM <: Multiplicity,
         ForAllM <: Multiplicity
       ](using
         @implicitNotFound(ErrorMsg.compositionForAllFailed)
-        evForAll: CheckForAllMultiplicity[ForAllM, AT, RQT],
+        evForAll: CheckForAllMultiplicityK[ForAllM, K, AT, RQT],
         @implicitNotFound(ErrorMsg.compositionForEachFailed)
-        evForEach: CheckForEachMultiplicity[ForEachM, AT, RQT],
-//        @implicitNotFound("DEBUG: ${RQT}") debug: RQT =:= false
-      ): RestrictedFnBuilder[AT, CustomConnective[RQT, ForEachM, ForAllM]] with
-        def execute(fns: RestrictedFn[AT, CustomConnective[RQT, ForEachM, ForAllM]])(args: AT): ExtractResultTypes[RQT] =
+        evForEach: CheckForEachMultiplicityK[ForEachM, K, AT, RQT],
+      ): RestrictedFnBuilder[K, AT, CustomConnective[RQT, ForEachM, ForAllM]] with
+        def execute(fns: RestrictedFn[K, AT, CustomConnective[RQT, ForEachM, ForAllM]])(args: AT): ExtractResultTypes[RQT] =
           val restrictedRefs = (0 until args.size).map(i => makeRestrictedRef(() => args.productElement(i).asInstanceOf[Any])).toArray
-          val restrictedRefsTuple= Tuple.fromArray(restrictedRefs).asInstanceOf[ToRestrictedRef[AT]]
+          val restrictedRefsTuple = Tuple.fromArray(restrictedRefs).asInstanceOf[ToRestrictedRefK[AT, K]]
           val resultConnective = fns(restrictedRefsTuple)
           val evaluated = resultConnective.execute()
           evaluated.asInstanceOf[ExtractResultTypes[RQT]]
@@ -298,9 +336,9 @@ abstract class RestrictedFnBase:
      * @param fns The function from restricted references to ComposedConnective-wrapped returns
      * @return The tuple of executed results
      */
-    def apply[AT <: Tuple, RT <: Tuple, ForEachM <: Multiplicity, ForAllM <: Multiplicity]
-    (args: AT)(fns: RestrictedFn[AT, CustomConnective[RT, ForEachM, ForAllM]])(
-      using builder: RestrictedFnBuilder[AT, CustomConnective[RT, ForEachM, ForAllM]]
+    def apply[K, AT <: Tuple, RT <: Tuple, ForEachM <: Multiplicity, ForAllM <: Multiplicity]
+    (args: AT)(fns: RestrictedFn[K, AT, CustomConnective[RT, ForEachM, ForAllM]])(
+      using builder: RestrictedFnBuilder[K, AT, CustomConnective[RT, ForEachM, ForAllM]]
     ): ExtractResultTypes[RT] =
       builder.execute(fns)(args)
 
