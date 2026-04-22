@@ -545,20 +545,19 @@ idb1(v42, v43) :- p10(v42, v43)."""
     // - p3: reference to idb0
     // - idb0: union_explicit of p1 and p2, making it recursive
     // - p4: second occurrence of edges in the recursive case
-    println(s"Generated Datalog:\n$datalog")
     val expected =
-      """p1(v0, v1) :- edges(v0, v1).
+      """p$A(v$B, v$C) :- edges(v$B, v$C).
 
- p3(v2, v3) :- idb0(v2, v3).
+      p$D(v$E, v$F) :- idb$G(v$E, v$F).
 
- p4(v6, v7) :- edges(v6, v7).
+      p$H(v$I, v$J) :- edges(v$I, v$J).
 
- p2(v4, v9) :- p3(v4, v5), p4(v5, v9).
+      p$K(v$L, v$M) :- p$D(v$L, v$N), p$H(v$N, v$M).
 
- idb0(v10, v11) :- p1(v10, v11).
- idb0(v10, v11) :- p2(v10, v11)."""
-    println(s"expected=\n$expected")
+      idb$G(v$O, v$P) :- p$A(v$O, v$P).
+      idb$G(v$O, v$P) :- p$K(v$O, v$P)."""
 
-    assertEquals(datalog, expected)
+    val (ok, msg) = DatalogTestUtils.matchDatalog(expected, datalog)
+    assert(ok, msg)
   }
 

@@ -149,11 +149,11 @@ class SouffleExecutionTest extends FunSuite:
     val datalog = result.peek()
 
     // Run Souffle with numerical test data
-    val factsDir = "/tmp/ancestry-facts"
+    val factsDir = Paths.get(getClass.getResource("/ancestry-facts").toURI).toString
     val output = runSouffle(datalog, factsDir, Seq("parents"), "p0")
 
     // Read expected results
-    val expected = readExpectedResults("/tmp/ancestry-expected/result.csv")
+    val expected = readExpectedResults(Paths.get(getClass.getResource("/ancestry-expected/result.csv").toURI).toString)
 
     // Compare (Souffle CSV output has no header, so don't skip any lines)
     val outputData = output.sorted
@@ -188,12 +188,12 @@ class SouffleExecutionTest extends FunSuite:
     val datalog = result.peek()
 
     // Run Souffle
-    val factsDir = "/Users/anna/lamp/carac/src/test/scala/test/examples/rqb_sssp/souffle-facts"
+    val factsDir = Paths.get(getClass.getResource("/sssp-facts").toURI).toString
     val output = runSouffle(datalog, factsDir, Seq("base", "edge"), "idb0")
 
     // Read expected results - note: our linear Datalog doesn't compute min,
     // so we'll just verify the facts are present (may have duplicates/non-minimal)
-    val expected = readExpectedResults("/Users/anna/lamp/carac/src/test/scala/test/examples/rqb_sssp/expected/cost.csv")
+    val expected = readExpectedResults(Paths.get(getClass.getResource("/sssp-expected/cost.csv").toURI).toString)
 
     // For now, just check that output is non-empty and has the right structure
     // (the full SSSP with min aggregation is beyond linear Datalog)
