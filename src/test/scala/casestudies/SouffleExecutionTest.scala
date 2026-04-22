@@ -16,8 +16,17 @@ import scala.io.Source
  */
 class SouffleExecutionTest extends FunSuite:
 
-  val isMac = sys.props("os.name").toLowerCase.contains("mac")
-  val souffleExecutable = if isMac then "souffle" else "/scratch/herlihy/souffle/build/src/souffle"
+  val souffleExecutable: String =
+    sys.env.getOrElse("SOUFFLE_SRC", {
+      val onPath = scala.util.Try("which souffle".!!.trim).getOrElse("")
+      if onPath.nonEmpty then onPath
+      else throw new RuntimeException(
+        """Souffle executable not found.
+          |Either install Souffle and make sure it is on your PATH,
+          |or set the SOUFFLE_SRC environment variable to the path of the Souffle binary.
+          |  e.g. export SOUFFLE_SRC=/usr/local/bin/souffle
+          |  or   export SOUFFLE_SRC=/path/to/souffle/build/src/souffle""".stripMargin)
+    })
 
   /**
    * Convert our Datalog output to valid Souffle format
