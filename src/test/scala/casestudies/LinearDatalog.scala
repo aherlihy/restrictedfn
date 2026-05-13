@@ -195,7 +195,7 @@ object Query:
   ): QT = {
     val argsRefs = (0 until bases.size).map(_ => IntensionalRef[Any](freshIntensionalId()))
     val restrictedRefs = argsRefs.map(a => RestrictedSelectable.makeRestrictedRef(() => a)).toArray
-    val restrictedRefsTuple = Tuple.fromArray(restrictedRefs).asInstanceOf[RestrictedSelectable.ToRestrictedRefK[QT, K]]
+    val restrictedRefsTuple = Tuple.fromArray(restrictedRefs).asInstanceOf[RestrictedSelectable.ToRestrictedRef[QT, K]]
     val resultConnective = fns(restrictedRefsTuple)
     val evaluated = resultConnective.execute()  // Execute the composed connective to get the tuple of results
     val unioned = bases.toArray.zip(evaluated.toArray).map { (baseQ, evalQ) =>

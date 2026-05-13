@@ -331,7 +331,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll-Linear Relevant error but got: $obtained"
     )
   }
@@ -346,7 +346,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll-Linear Affine error but got: $obtained"
     )
   }
@@ -361,7 +361,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll-Linear error but got: $obtained"
     )
   }
@@ -388,7 +388,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll-Linear error but got: $obtained"
     )
   }
@@ -410,7 +410,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forEachLinearFailed),
       s"Expected ForEach-Linear Relevant error but got: $obtained"
     )
   }
@@ -425,7 +425,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forEachLinearFailed),
       s"Expected ForEach-Linear Affine error but got: $obtained"
     )
   }
@@ -483,7 +483,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forEachLinearFailed),
       s"Expected ForEach-Linear Relevant error but got: $obtained"
     )
   }
@@ -518,7 +518,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForAll-Affine error but got: $obtained"
     )
   }
@@ -554,7 +554,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForAll-Affine error but got: $obtained"
     )
   }
@@ -589,7 +589,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forEachAffineFailed),
       s"Expected ForEach-Affine error but got: $obtained"
     )
   }
@@ -625,7 +625,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forEachAffineFailed),
       s"Expected ForEach-Affine error but got: $obtained"
     )
   }
@@ -660,7 +660,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll-Relevant error but got: $obtained"
     )
   }
@@ -697,7 +697,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll-Relevant error but got: $obtained"
     )
   }
@@ -732,7 +732,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forEachRelevantFailed),
       s"Expected ForEach-Relevant error but got: $obtained"
     )
   }
@@ -773,7 +773,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forEachRelevantFailed),
       s"Expected ForEach-Relevant error but got: $obtained"
     )
   }
@@ -803,7 +803,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forEachLinearFailed),
       s"Expected ForEach-Linear error but got: $obtained"
     )
   }
@@ -829,7 +829,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forEachAffineFailed),
       s"Expected ForEach-Affine error but got: $obtained"
     )
   }
@@ -855,7 +855,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forEachRelevantFailed),
       s"Expected ForEach-Relevant error but got: $obtained"
     )
   }
@@ -885,7 +885,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll-Linear error but got: $obtained"
     )
   }
@@ -911,7 +911,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForAll-Affine error but got: $obtained"
     )
   }
@@ -937,7 +937,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll-Relevant error but got: $obtained"
     )
   }
@@ -968,7 +968,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll-Linear error but got: $obtained"
     )
   }
@@ -994,7 +994,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForAll-Affine error but got: $obtained"
     )
   }
@@ -1021,7 +1021,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll-Relevant error but got: $obtained"
     )
   }
@@ -1047,7 +1047,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll-Relevant error but got: $obtained"
     )
   }
@@ -1073,7 +1073,7 @@ class CustomProductConnectiveTest extends FunSuite:
       )
     """)
     assert(
-      obtained.contains(TestUtils.forEach) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forEachRelevantFailed),
       s"Expected ForEach-Relevant error but got: $obtained"
     )
   }

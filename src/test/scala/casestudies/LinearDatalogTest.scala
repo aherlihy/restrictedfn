@@ -661,7 +661,7 @@ idb1(v42, v43) :- p10(v42, v43)."""
         ))
       )
     """)
-    assert(obtained.contains(TestUtils.noGivenInstance), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forEachAffineFailed), s"obtained: $obtained")
   }
 
   test("NEGATIVE: ForEach-Affine - using argument twice via intermediate") {
@@ -683,7 +683,7 @@ idb1(v42, v43) :- p10(v42, v43)."""
         ))
       )
     """)
-    assert(obtained.contains(TestUtils.noGivenInstance), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forEachAffineFailed), s"obtained: $obtained")
   }
 
   test("NEGATIVE: ForAll-Relevant - forgetting to use an argument") {
@@ -712,7 +712,7 @@ idb1(v42, v43) :- p10(v42, v43)."""
     // - The fixedPoint return-type evidence failure (when LiftInnerType cannot
     //   reduce because q3 is a plain Query rather than a Restricted)
     assert(
-      (obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant)) ||
+      (obtained.contains(TestUtils.forAllRelevantFailed)) ||
         obtained.contains(TestUtils.fixedPointReturnTypesFailed),
       s"obtained: $obtained"
     )
@@ -738,7 +738,7 @@ idb1(v42, v43) :- p10(v42, v43)."""
       )
     """)
     assert(
-      (obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant)) ||
+      (obtained.contains(TestUtils.forAllRelevantFailed)) ||
         obtained.contains(TestUtils.fixedPointReturnTypesFailed),
       s"obtained: $obtained"
     )

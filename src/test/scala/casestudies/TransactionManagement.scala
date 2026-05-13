@@ -94,7 +94,7 @@ class TransactionManagementTest extends FunSuite:
         ScheduleConnective.apply((a, a.include(b)))
       )
     """)
-    assert(obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forAllAffineFailed), s"obtained: $obtained")
   }
 
   test("NEGATIVE: All resources assigned to same transaction (ForAll-Affine violation)") {
@@ -110,5 +110,5 @@ class TransactionManagementTest extends FunSuite:
         ScheduleConnective.apply((a.include(b), a.include(b)))
       )
     """)
-    assert(obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forAllAffineFailed), s"obtained: $obtained")
   }

@@ -93,7 +93,7 @@ class StreamProcessingTest extends FunSuite:
         RouteConnective.apply((a, a))
       )
     """)
-    assert(obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forAllRelevantFailed), s"obtained: $obtained")
   }
 
   test("NEGATIVE: Route drops all inputs (ForAll-Relevant violation)") {
@@ -110,5 +110,5 @@ class StreamProcessingTest extends FunSuite:
         RouteConnective.apply(Tuple1(a))
       )
     """)
-    assert(obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forAllRelevantFailed), s"obtained: $obtained")
   }

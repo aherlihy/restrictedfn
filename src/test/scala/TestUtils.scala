@@ -3,27 +3,21 @@ package test
 import restrictedfn.{ErrorMsg, Multiplicity }
 import restrictedfn.RestrictedSelectable.{given, *}
 object TestUtils:
-  // Per-multiplicity error messages keyed off the failing constraint.
+  // Per-multiplicity error messages from the @implicitNotFound annotations on
+  // the violation marker traits. Tests assert the exact message that surfaces
+  // for each failing constraint, so the user-visible diagnostics stay in
+  // lockstep with the implementation.
   val forAllRelevantFailed = ErrorMsg.forAllRelevantFailed
   val forAllAffineFailed = ErrorMsg.forAllAffineFailed
   val forAllLinearFailed = ErrorMsg.forAllLinearFailed
   val forEachRelevantFailed = ErrorMsg.forEachRelevantFailed
   val forEachAffineFailed = ErrorMsg.forEachAffineFailed
   val forEachLinearFailed = ErrorMsg.forEachLinearFailed
+  // Fixed-point evidence parameter messages (defined in LinearDatalog.scala).
   val fixedPointReturnLengthFailed = "fixedPoint requires same number of arguments and returns"
   val fixedPointReturnTypesFailed = "fixedPoint requires return types to match argument types"
+  // Standard scalac error fragments used to match unrelated compile errors.
   val missingField = "is not a member of"
-  // Substrings of the violation marker messages. After the constraint-check
-  // refactor, the user sees a single-line domain-specific message like
-  // "ForAll Relevant constraint failed: All arguments must be used at least
-  // once across all values" delivered via @implicitNotFound on a violation
-  // marker trait.
-  val noGivenInstance = "constraint failed"
-  val forAll = "ForAll"
-  val forEach = "ForEach"
-  val affine = "Affine"
-  val relevant = "Relevant"
-  val linear = "Linear"
 
 type ForAllLinearConnective[RT <: Tuple] = CustomConnective[RT, Multiplicity.Unrestricted, Multiplicity.Linear]
 object ForAllLinearConnective:

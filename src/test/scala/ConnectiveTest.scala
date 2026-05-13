@@ -98,7 +98,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected linearity error but got: $obtained"
     )
   }
@@ -267,7 +267,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll constraint failure but got: $obtained"
     )
   }
@@ -288,7 +288,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForEach constraint failure but got: $obtained"
     )
   }
@@ -335,7 +335,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForEach constraint failure but got: $obtained"
     )
   }
@@ -384,7 +384,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll constraint failure but got: $obtained"
     )
   }
@@ -463,7 +463,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForEach constraint failure but got: $obtained"
     )
   }
@@ -511,7 +511,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll constraint failure but got: $obtained"
     )
   }
@@ -549,7 +549,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForAll constraint failure but got: $obtained"
     )
   }
@@ -569,7 +569,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForEach constraint failure but got: $obtained"
     )
   }
@@ -614,7 +614,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForEach constraint failure but got: $obtained"
     )
   }
@@ -662,7 +662,7 @@ class ConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll constraint failure but got: $obtained"
     )
   }

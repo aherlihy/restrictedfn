@@ -93,7 +93,7 @@ class QuantumProgrammingTest extends FunSuite:
         ))
       )
     """)
-    assert(obtained.contains(TestUtils.noGivenInstance), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forEachLinearFailed), s"obtained: $obtained")
   }
 
   test("NEGATIVE: Branch uses qubit twice (ForEach-Linear violation)") {
@@ -112,5 +112,5 @@ class QuantumProgrammingTest extends FunSuite:
         ))
       )
     """)
-    assert(obtained.contains(TestUtils.noGivenInstance), s"obtained: $obtained")
+    assert(obtained.contains(TestUtils.forEachLinearFailed), s"obtained: $obtained")
   }

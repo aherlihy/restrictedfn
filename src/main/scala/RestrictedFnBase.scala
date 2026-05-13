@@ -85,15 +85,11 @@ abstract class RestrictedFnBase:
       case EmptyTuple => EmptyTuple
       case h *: tail => executeNested(h) *: tupleExecute(tail)
 
-  // Construct restricted types from arguments
-  // Converts argument to Restricted types with single-element dependency tuples
-  // Each argument gets a unique index: arg0 → (0), arg1 → (1), etc.
-  type ToRestrictedRef[AT <: Tuple] = Tuple.Map[ZipWithIndex[AT], [T] =>> T match
-    case (elem, index) => Restricted[elem, Tuple1[index]]
-  ]
-
-  // κ-tagged variant: each index is intersected with K
-  type ToRestrictedRefK[AT <: Tuple, K] = Tuple.Map[ZipWithIndex[AT], [T] =>> T match
+  // Construct restricted types from arguments.
+  // Each argument index N becomes a κ-tagged identifier N & K, matching
+  // the $a_\kappa$ identifiers in the paper. K is a fresh type per
+  // restricted-function invocation (anonymous classes / value types in code).
+  type ToRestrictedRef[AT <: Tuple, K] = Tuple.Map[ZipWithIndex[AT], [T] =>> T match
     case (elem, index) => Restricted[elem, Tuple1[index & K]]
   ]
 
@@ -215,27 +211,10 @@ abstract class RestrictedFnBase:
     case h *: tail => LiftInnerType[h] match
       case (_, d) => Tuple.Concat[d, FlattenAllDependencies[tail]]
 
-  type CheckForAll[M <: Multiplicity, AT <: Tuple, RQT <: Tuple] = M match
-    case Multiplicity.Linear =>
-      CheckLinear[GenerateIndices[0, Tuple.Size[AT]], FlattenAllDependencies[RQT], ForAllLinearViolation]
-    case Multiplicity.Affine =>
-      CheckAffine[FlattenAllDependencies[RQT], ForAllAffineViolation]
-    case Multiplicity.Relevant =>
-      CheckRelevant[GenerateIndices[0, Tuple.Size[AT]], FlattenAllDependencies[RQT], ForAllRelevantViolation]
-    case Multiplicity.Unrestricted => true
-
-  // ============================================================================
-  // ForEach: Check each dependency tuple separately
-  // ============================================================================
-
-  type CheckForEach[M <: Multiplicity, AT <: Tuple, RQT <: Tuple] = M match
-    case Multiplicity.Linear =>
-      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], Multiplicity.Linear, ForEachLinearViolation]
-    case Multiplicity.Affine =>
-      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], Multiplicity.Affine, ForEachAffineViolation]
-    case Multiplicity.Relevant =>
-      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], Multiplicity.Relevant, ForEachRelevantViolation]
-    case Multiplicity.Unrestricted => true
+  // The K parameter is the fresh tag used to differentiate multiple invocations
+  // of restricted functions. Argument indices are tagged via GenerateIndicesK,
+  // producing identifiers of the form (i & K) that match the $a_\kappa$
+  // identifiers in the paper.
 
   // Iterate over each dependency tuple and check the per-element constraint.
   // Folds to a single result: `true` if every element passes, or `Violation`
@@ -268,14 +247,14 @@ abstract class RestrictedFnBase:
       case false => false
 
   // ============================================================================
-  // κ-tagged variants: indices become `index & K`
+  // κ-tagged check types: indices carry a fresh K per invocation
   // ============================================================================
 
   type GenerateIndicesK[N <: Int, Size <: Int, K] <: Tuple = N match
     case Size => EmptyTuple
     case _ => (N & K) *: GenerateIndicesK[compiletime.ops.int.S[N], Size, K]
 
-  type CheckForAllK[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
+  type CheckForAll[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
     case Multiplicity.Linear =>
       CheckLinear[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT], ForAllLinearViolation]
     case Multiplicity.Affine =>
@@ -284,7 +263,7 @@ abstract class RestrictedFnBase:
       CheckRelevant[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT], ForAllRelevantViolation]
     case Multiplicity.Unrestricted => true
 
-  type CheckForEachK[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
+  type CheckForEach[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
     case Multiplicity.Linear =>
       CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], Multiplicity.Linear, ForEachLinearViolation]
     case Multiplicity.Affine =>
@@ -295,53 +274,39 @@ abstract class RestrictedFnBase:
 
   // Wrapper traits whose derive given uses summonInline to FORCE match-type
   // reduction at the call site. Without this, scalac's cascade resolution
-  // displays the unreduced CheckForAllK[...] type and misses the
+  // displays the unreduced CheckForAll[...] type and misses the
   // @implicitNotFound annotation on the violation marker that the match type
   // would reduce to. summonInline expands during the inline derive's body and
   // surfaces the violation marker's annotation as a regular compile error.
-  sealed trait CheckForAllMultiplicityK[ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple]
-  sealed trait CheckForEachMultiplicityK[ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple]
+  sealed trait CheckForAllMultiplicity[ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple]
+  sealed trait CheckForEachMultiplicity[ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple]
 
-  inline given deriveCheckForAllMultiplicityK[
+  inline given deriveCheckForAllMultiplicity[
     ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple
-  ]: CheckForAllMultiplicityK[ForAllM, K, AT, RQT] = {
-    scala.compiletime.summonInline[CheckForAllK[ForAllM, K, AT, RQT]]
-    new CheckForAllMultiplicityK[ForAllM, K, AT, RQT] {}
+  ]: CheckForAllMultiplicity[ForAllM, K, AT, RQT] = {
+    scala.compiletime.summonInline[CheckForAll[ForAllM, K, AT, RQT]]
+    new CheckForAllMultiplicity[ForAllM, K, AT, RQT] {}
   }
 
-  inline given deriveCheckForEachMultiplicityK[
+  inline given deriveCheckForEachMultiplicity[
     ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple
-  ]: CheckForEachMultiplicityK[ForEachM, K, AT, RQT] = {
-    scala.compiletime.summonInline[CheckForEachK[ForEachM, K, AT, RQT]]
-    new CheckForEachMultiplicityK[ForEachM, K, AT, RQT] {}
+  ]: CheckForEachMultiplicity[ForEachM, K, AT, RQT] = {
+    scala.compiletime.summonInline[CheckForEach[ForEachM, K, AT, RQT]]
+    new CheckForEachMultiplicity[ForEachM, K, AT, RQT] {}
   }
 
   // ============================================================================
-  // Top-level constraint checks with error messages
+  // Evidence givens used to satisfy constraint-check match types
   // ============================================================================
 
-  // Given instance for true - used when Unrestricted multiplicity bypasses constraints
+  // For Unrestricted constraints (and successful Relevant/Affine/Linear) which
+  // reduce to the singleton `true`.
   given trueEvidence: true = true
 
-  // Given instance for tuple constraints - used when CheckLinear returns a tuple
+  // For tuple constraints (Linear's pair, ForEach's accumulator).
   given tupleEvidence[A, B](using A, B): (A, B) = (summon[A], summon[B])
-
-  // Given instance for general tuples - used for ForEach checks that return tuple of evidences
   given emptyTupleEvidence: EmptyTuple = EmptyTuple
   given consTupleEvidence[H, T <: Tuple](using H, T): (H *: T) = summon[H] *: summon[T]
-
-  // Just use the check types directly without wrappers
-  type CheckForAllMultiplicity[
-    ForAllM <: Multiplicity,
-    AT <: Tuple,
-    RQT <: Tuple
-  ] = CheckForAll[ForAllM, AT, RQT]
-
-  type CheckForEachMultiplicity[
-    ForEachM <: Multiplicity,
-    AT <: Tuple,
-    RQT <: Tuple
-  ] = CheckForEach[ForEachM, AT, RQT]
 
   // ============================================================================
   // RestrictedFn Methods: Combining ForEach and ForAll Constraints
@@ -354,7 +319,7 @@ abstract class RestrictedFnBase:
      * This is the library's contribution - a clean name for linear functions
      * that take restricted references and return a ComposedConnective.
      */
-    type RestrictedFn[K, AT <: Tuple, RQT] = ToRestrictedRefK[AT, K] => RQT
+    type RestrictedFn[K, AT <: Tuple, RQT] = ToRestrictedRef[AT, K] => RQT
 
     type ExtractReturnType[Connective] = Connective match
       case CustomConnective[rqt, forEachM, forAllM] =>
@@ -376,12 +341,12 @@ abstract class RestrictedFnBase:
         ForEachM <: Multiplicity,
         ForAllM <: Multiplicity
       ](using
-        evForAll: CheckForAllMultiplicityK[ForAllM, K, AT, RQT],
-        evForEach: CheckForEachMultiplicityK[ForEachM, K, AT, RQT],
+        evForAll: CheckForAllMultiplicity[ForAllM, K, AT, RQT],
+        evForEach: CheckForEachMultiplicity[ForEachM, K, AT, RQT],
       ): RestrictedFnBuilder[K, AT, CustomConnective[RQT, ForEachM, ForAllM]] with
         def execute(fns: RestrictedFn[K, AT, CustomConnective[RQT, ForEachM, ForAllM]])(args: AT): ExtractResultTypes[RQT] =
           val restrictedRefs = (0 until args.size).map(i => makeRestrictedRef(() => args.productElement(i).asInstanceOf[Any])).toArray
-          val restrictedRefsTuple = Tuple.fromArray(restrictedRefs).asInstanceOf[ToRestrictedRefK[AT, K]]
+          val restrictedRefsTuple = Tuple.fromArray(restrictedRefs).asInstanceOf[ToRestrictedRef[AT, K]]
           val resultConnective = fns(restrictedRefsTuple)
           val evaluated = resultConnective.execute()
           evaluated.asInstanceOf[ExtractResultTypes[RQT]]

@@ -64,7 +64,7 @@ import restrictedfn.RestrictedSelectable.{given, *}
      // This should fail because refs._1 is used in two different lists
      // Both lists would have dependency Tuple1[0], violating linearity
      // Correct number of args (2 in, 2 out), but refs._1 used twice
-     assert(obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear), s"obtained: $obtained")
+     assert(obtained.contains(TestUtils.forAllLinearFailed), s"obtained: $obtained")
    }
 
    test("linearity violation: returning List and the element inside it") {
@@ -79,7 +79,7 @@ import restrictedfn.RestrictedSelectable.{given, *}
      // This should fail because we're returning both a List containing refs._1
      // and refs._1 itself - that's using refs._1 twice
      // Correct number of args (3 in, 3 out), but refs._1 used twice
-     assert(obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear), s"obtained: $obtained")
+     assert(obtained.contains(TestUtils.forAllLinearFailed), s"obtained: $obtained")
    }
 
    test("linearity violation: same ref in Option and List") {
@@ -92,7 +92,7 @@ import restrictedfn.RestrictedSelectable.{given, *}
      """)
      // This should fail because refs._1 appears in both Option and List
      // Correct number of args (2 in, 2 out), but refs._1 used twice
-     assert(obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear), s"obtained: $obtained")
+     assert(obtained.contains(TestUtils.forAllLinearFailed), s"obtained: $obtained")
    }
 
    test("linearity OK: different refs in different containers") {
@@ -166,7 +166,7 @@ import restrictedfn.RestrictedSelectable.{given, *}
      """)
      // If lifting works correctly, both list references have dependency Tuple1[0]
      // and returning them both violates linearity
-     assert(obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear), s"obtained: $obtained")
+     assert(obtained.contains(TestUtils.forAllLinearFailed), s"obtained: $obtained")
    }
 
    test("unknown wrap types not ok without .lift") {
@@ -188,12 +188,12 @@ import restrictedfn.RestrictedSelectable.{given, *}
      ForAllLinearConnective((wrapped, refs._2))
    )
      """)
-     // Either the constraint check fires its violation message, or the
-     // unknown wrap type blocks LiftInnerType reduction (which surfaces
-     // as a "No given instance of type CheckLinear[..., LiftInnerType[Wrap[...]]]"
-     // error referencing the unreduced match type).
+     // Either the ForAll-Linear violation fires (when match-type reduction
+     // reaches the violation marker) or the unknown wrap type blocks
+     // LiftInnerType reduction (the "No given instance of type
+     // CheckLinear[..., LiftInnerType[Wrap[...]]]" form).
      assert(
-       obtained.contains(TestUtils.noGivenInstance) ||
+       obtained.contains(TestUtils.forAllLinearFailed) ||
          obtained.contains("LiftInnerType") ||
          obtained.contains("CheckLinear"),
        s"obtained: $obtained"
@@ -233,5 +233,5 @@ import restrictedfn.RestrictedSelectable.{given, *}
        )
      """)
      // Should fail because both returns depend on refs._1
-     assert(obtained.contains(TestUtils.noGivenInstance) && obtained.contains(TestUtils.linear), s"obtained: $obtained")
+     assert(obtained.contains(TestUtils.forAllLinearFailed), s"obtained: $obtained")
    }

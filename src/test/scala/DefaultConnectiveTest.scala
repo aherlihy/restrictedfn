@@ -66,7 +66,7 @@ class DefaultConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.affine),
+      obtained.contains(TestUtils.forAllAffineFailed),
       s"Expected ForAll-Affine error but got: $obtained"
     )
   }
@@ -122,8 +122,8 @@ class DefaultConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.noGivenInstance),
-      s"Expected ForAll-Relevant error but got: $obtained"
+      obtained.contains(TestUtils.forAllLinearFailed),
+      s"Expected ForAll-Linear error but got: $obtained"
     )
   }
   test("General linear: NEGATIVE - argument used twice fails") {
@@ -141,7 +141,7 @@ class DefaultConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.linear),
+      obtained.contains(TestUtils.forAllLinearFailed),
       s"Expected ForEach-Affine error but got: $obtained"
     )
   }
@@ -197,7 +197,7 @@ class DefaultConnectiveTest extends FunSuite:
     """)
 
     assert(
-      obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant),
+      obtained.contains(TestUtils.forAllRelevantFailed),
       s"Expected ForAll-Relevant error but got: $obtained"
     )
   }
