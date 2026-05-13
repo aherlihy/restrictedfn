@@ -116,7 +116,7 @@ class DefaultConnectiveTest extends FunSuite:
       val a = OpsExample("a")
       val b = OpsExample("b")
 
-      RestrictedFn.apply((a, b))(refs =>test
+      RestrictedFn.apply((a, b))(refs =>
         ForAllLinearConnective(Tuple1(refs._1))  // Error: refs._2 not used
       )
     """)
@@ -211,5 +211,49 @@ class DefaultConnectiveTest extends FunSuite:
 
     assertEquals(result._1.name, "a")
     assertEquals(result._2.name, "b")
+  }
+
+  // Locks the user-visible error message for the most common ForAll-Relevant
+  // violation (forgetting to use one of the function's arguments).
+  test("ForAll-Relevant violation surfaces paper-quoted message") {
+    val obtained = compileErrors(
+      """
+      import OpsExampleOps.*
+      import restrictedfn.{RestrictedSelectable, Multiplicity}
+
+      val a = OpsExample("a")
+      val b = OpsExample("b")
+
+      RestrictedFn.apply((a, b))(refs =>
+        ForAllRelevantConnective(Tuple1(refs._1))  // refs._2 not used
+      )
+    """)
+
+    val expected =
+      "ForAll Relevant constraint failed: All arguments must be used at least once across all values"
+    assert(
+      obtained.contains(expected),
+      s"Expected substring:\n  $expected\n\ngot:\n$obtained"
+    )
+  }
+
+  test("ForAll-Affine violation surfaces paper-style message") {
+    val obtained = compileErrors(
+      """
+      import OpsExampleOps.*
+      import restrictedfn.{RestrictedSelectable, Multiplicity}
+
+      val a = OpsExample("a")
+
+      RestrictedFn.apply(Tuple1(a))(refs =>
+        ForAllAffineConnective((refs._1, refs._1))  // arg used twice
+      )
+    """)
+    val expected =
+      "ForAll Affine constraint failed: No argument may be used more than once across all values"
+    assert(
+      obtained.contains(expected),
+      s"Expected substring:\n  $expected\n\ngot:\n$obtained"
+    )
   }
 

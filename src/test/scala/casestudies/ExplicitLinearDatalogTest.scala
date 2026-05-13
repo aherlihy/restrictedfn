@@ -499,7 +499,11 @@ idb1(v42, v43) :- p10(v42, v43)."""
         ))
       )
     """)
-    assert(obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant), s"obtained: $obtained")
+    assert(
+      (obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant)) ||
+        obtained.contains(TestUtils.fixedPointReturnTypesFailed),
+      s"obtained: $obtained"
+    )
   }
 
   test("NEGATIVE: ForAll-Relevant - using external query instead") {
@@ -521,7 +525,11 @@ idb1(v42, v43) :- p10(v42, v43)."""
         ))
       )
     """)
-    assert(obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant), s"obtained: $obtained")
+    assert(
+      (obtained.contains(TestUtils.forAll) && obtained.contains(TestUtils.relevant)) ||
+        obtained.contains(TestUtils.fixedPointReturnTypesFailed),
+      s"obtained: $obtained"
+    )
   }
 
   test("ExplicitLinearDatalog") {

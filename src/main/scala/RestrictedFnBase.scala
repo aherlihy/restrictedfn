@@ -128,6 +128,11 @@ abstract class RestrictedFnBase:
       case (a, d) => (Option[a], d)
     case Vector[inner] => LiftInnerType[inner] match
       case (a, d) => (Vector[a], d)
+    // Plain (unrestricted) values: treated as having no dependencies,
+    // matching the LIFT rule in the formalism. Needed so the constraint
+    // match types reduce cleanly even when a return tuple mixes Restricted
+    // and plain values.
+    case _ => (T, EmptyTuple)
 
   // Extract the wrapped type of a Restricted type
   type ExtractResultTypes[RQT <: Tuple] <: Tuple = RQT match
@@ -147,16 +152,58 @@ abstract class RestrictedFnBase:
     case _ => D
 
   // ============================================================================
-  // Constraint Checks - Core logic that works on a single dependency tuple
+  // Constraint Checks - structural, match-type-based
   // ============================================================================
+  //
+  // Each check reduces to either `true` (constraint satisfied; summonable via
+  // `trueEvidence` below) or one of the violation marker traits in ErrorMsg.scala
+  // (no givens; @implicitNotFound surfaces the domain-specific message). The
+  // Violation type parameter lets the same check helper produce a different
+  // marker depending on whether it is being used in a ForAll or ForEach context.
 
-  // Check if all required indices appear in dependencies
-  type CheckRelevant[Indices <: Tuple, Deps <: Tuple] =
-    Tuple.Union[Indices] <:< Tuple.Union[Deps]
+  // ContainsType[Tup, Elem]: structural membership test on a tuple of
+  // singleton (typically integer-singleton) types.
+  type ContainsType[Tup <: Tuple, Elem] <: Boolean = Tup match
+    case EmptyTuple => false
+    case Elem *: _ => true
+    case _ *: t    => ContainsType[t, Elem]
 
-  // Check if dependencies have no duplicates
-  type CheckAffine[Deps <: Tuple] =
-    HasDuplicate[Deps] =:= Deps
+  // AllContained[Sub, Sup]: every element of Sub appears in Sup.
+  type AllContained[Sub <: Tuple, Sup <: Tuple] <: Boolean = Sub match
+    case EmptyTuple => true
+    case h *: t => ContainsType[Sup, h] match
+      case true  => AllContained[t, Sup]
+      case false => false
+
+  // HasNoDuplicates[Tup]: no two elements of Tup are the same type.
+  type HasNoDuplicates[Tup <: Tuple] <: Boolean = Tup match
+    case EmptyTuple => true
+    case h *: t => ContainsType[t, h] match
+      case true  => false
+      case false => HasNoDuplicates[t]
+
+  // CheckRelevant: every index in `Indices` must appear in `Deps`.
+  // Reduces to `true` on success, to `Violation` on failure.
+  type CheckRelevant[Indices <: Tuple, Deps <: Tuple, Violation] =
+    AllContained[Indices, Deps] match
+      case true  => true
+      case false => Violation
+
+  // CheckAffine: `Deps` must contain no duplicate elements.
+  type CheckAffine[Deps <: Tuple, Violation] =
+    HasNoDuplicates[Deps] match
+      case true  => true
+      case false => Violation
+
+  // CheckLinear: combines both. Any failure produces the same Violation, so
+  // a Linear violation always surfaces as the Linear-specific message rather
+  // than leaking which sub-check failed.
+  type CheckLinear[Indices <: Tuple, Deps <: Tuple, Violation] =
+    AllContained[Indices, Deps] match
+      case true => HasNoDuplicates[Deps] match
+        case true  => true
+        case false => Violation
+      case false => Violation
 
   // ============================================================================
   // ForAll: Flatten all dependencies, then check once
@@ -170,12 +217,11 @@ abstract class RestrictedFnBase:
 
   type CheckForAll[M <: Multiplicity, AT <: Tuple, RQT <: Tuple] = M match
     case Multiplicity.Linear =>
-      (CheckRelevant[GenerateIndices[0, Tuple.Size[AT]], FlattenAllDependencies[RQT]],
-       CheckAffine[FlattenAllDependencies[RQT]])
+      CheckLinear[GenerateIndices[0, Tuple.Size[AT]], FlattenAllDependencies[RQT], ForAllLinearViolation]
     case Multiplicity.Affine =>
-      CheckAffine[FlattenAllDependencies[RQT]]
+      CheckAffine[FlattenAllDependencies[RQT], ForAllAffineViolation]
     case Multiplicity.Relevant =>
-      CheckRelevant[GenerateIndices[0, Tuple.Size[AT]], FlattenAllDependencies[RQT]]
+      CheckRelevant[GenerateIndices[0, Tuple.Size[AT]], FlattenAllDependencies[RQT], ForAllRelevantViolation]
     case Multiplicity.Unrestricted => true
 
   // ============================================================================
@@ -184,37 +230,42 @@ abstract class RestrictedFnBase:
 
   type CheckForEach[M <: Multiplicity, AT <: Tuple, RQT <: Tuple] = M match
     case Multiplicity.Linear =>
-      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], true, true]
+      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], Multiplicity.Linear, ForEachLinearViolation]
     case Multiplicity.Affine =>
-      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], false, true]
+      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], Multiplicity.Affine, ForEachAffineViolation]
     case Multiplicity.Relevant =>
-      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], true, false]
+      CheckEach[GenerateIndices[0, Tuple.Size[AT]], ExtractDependencyTypes[RQT], Multiplicity.Relevant, ForEachRelevantViolation]
     case Multiplicity.Unrestricted => true
 
-  // Helper: Iterate over each dependency tuple and check constraints
-  // needRelevant = check that all indices are present
-  // needAffine = check that there are no duplicates
+  // Iterate over each dependency tuple and check the per-element constraint.
+  // Folds to a single result: `true` if every element passes, or `Violation`
+  // if any element fails. This avoids building a tuple of checks (which would
+  // make scalac's cascade report the parametric tuple-deconstruction step
+  // instead of the violation marker, losing the @implicitNotFound message).
   type CheckEach[
     Indices <: Tuple,
     DepTuples <: Tuple,
-    NeedRelevant <: Boolean,
-    NeedAffine <: Boolean
-  ] <: Tuple = DepTuples match
-    case EmptyTuple => EmptyTuple
-    case deps *: rest =>
-      CheckOne[Indices, deps, NeedRelevant, NeedAffine] *: CheckEach[Indices, rest, NeedRelevant, NeedAffine]
+    M <: Multiplicity,
+    Violation
+  ] = DepTuples match
+    case EmptyTuple => true
+    case deps *: rest => CheckOne[Indices, deps, M] match
+      case true  => CheckEach[Indices, rest, M, Violation]
+      case false => Violation
 
-  // Check a single dependency tuple based on flags
-  type CheckOne[
-    Indices <: Tuple,
-    Deps <: Tuple,
-    NeedRelevant <: Boolean,
-    NeedAffine <: Boolean
-  ] = (NeedRelevant, NeedAffine) match
-    case (true, true) => (CheckRelevant[Indices, Deps], CheckAffine[Deps])
-    case (true, false) => CheckRelevant[Indices, Deps]
-    case (false, true) => CheckAffine[Deps]
-    case (false, false) => true
+  // Boolean-valued single-element check. Returns the boolean outcome of the
+  // per-element constraint; CheckEach turns failure into the appropriate
+  // Violation marker.
+  type CheckOne[Indices <: Tuple, Deps <: Tuple, M <: Multiplicity] <: Boolean = M match
+    case Multiplicity.Linear   => AllContainedAndNoDups[Indices, Deps]
+    case Multiplicity.Affine   => HasNoDuplicates[Deps]
+    case Multiplicity.Relevant => AllContained[Indices, Deps]
+    case Multiplicity.Unrestricted => true
+
+  type AllContainedAndNoDups[Indices <: Tuple, Deps <: Tuple] <: Boolean =
+    AllContained[Indices, Deps] match
+      case true  => HasNoDuplicates[Deps]
+      case false => false
 
   // ============================================================================
   // κ-tagged variants: indices become `index & K`
@@ -226,28 +277,44 @@ abstract class RestrictedFnBase:
 
   type CheckForAllK[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
     case Multiplicity.Linear =>
-      (CheckRelevant[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT]],
-       CheckAffine[FlattenAllDependencies[RQT]])
+      CheckLinear[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT], ForAllLinearViolation]
     case Multiplicity.Affine =>
-      CheckAffine[FlattenAllDependencies[RQT]]
+      CheckAffine[FlattenAllDependencies[RQT], ForAllAffineViolation]
     case Multiplicity.Relevant =>
-      CheckRelevant[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT]]
+      CheckRelevant[GenerateIndicesK[0, Tuple.Size[AT], K], FlattenAllDependencies[RQT], ForAllRelevantViolation]
     case Multiplicity.Unrestricted => true
 
   type CheckForEachK[M <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] = M match
     case Multiplicity.Linear =>
-      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], true, true]
+      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], Multiplicity.Linear, ForEachLinearViolation]
     case Multiplicity.Affine =>
-      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], false, true]
+      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], Multiplicity.Affine, ForEachAffineViolation]
     case Multiplicity.Relevant =>
-      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], true, false]
+      CheckEach[GenerateIndicesK[0, Tuple.Size[AT], K], ExtractDependencyTypes[RQT], Multiplicity.Relevant, ForEachRelevantViolation]
     case Multiplicity.Unrestricted => true
 
-  type CheckForAllMultiplicityK[ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] =
-    CheckForAllK[ForAllM, K, AT, RQT]
+  // Wrapper traits whose derive given uses summonInline to FORCE match-type
+  // reduction at the call site. Without this, scalac's cascade resolution
+  // displays the unreduced CheckForAllK[...] type and misses the
+  // @implicitNotFound annotation on the violation marker that the match type
+  // would reduce to. summonInline expands during the inline derive's body and
+  // surfaces the violation marker's annotation as a regular compile error.
+  sealed trait CheckForAllMultiplicityK[ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple]
+  sealed trait CheckForEachMultiplicityK[ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple]
 
-  type CheckForEachMultiplicityK[ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple] =
-    CheckForEachK[ForEachM, K, AT, RQT]
+  inline given deriveCheckForAllMultiplicityK[
+    ForAllM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple
+  ]: CheckForAllMultiplicityK[ForAllM, K, AT, RQT] = {
+    scala.compiletime.summonInline[CheckForAllK[ForAllM, K, AT, RQT]]
+    new CheckForAllMultiplicityK[ForAllM, K, AT, RQT] {}
+  }
+
+  inline given deriveCheckForEachMultiplicityK[
+    ForEachM <: Multiplicity, K, AT <: Tuple, RQT <: Tuple
+  ]: CheckForEachMultiplicityK[ForEachM, K, AT, RQT] = {
+    scala.compiletime.summonInline[CheckForEachK[ForEachM, K, AT, RQT]]
+    new CheckForEachMultiplicityK[ForEachM, K, AT, RQT] {}
+  }
 
   // ============================================================================
   // Top-level constraint checks with error messages
@@ -293,11 +360,15 @@ abstract class RestrictedFnBase:
       case CustomConnective[rqt, forEachM, forAllM] =>
         ExtractResultTypes[rqt]
 
+    // The user-visible domain-specific message is delivered by the
+    // @implicitNotFound annotations on the violation marker traits in
+    // ErrorMsg.scala, surfaced when a constraint-check match type reduces to
+    // a violation marker. No annotation is needed on RestrictedFnBuilder
+    // itself: the violation marker carries the actionable message.
     trait RestrictedFnBuilder[K, AT <: Tuple, Connective]:
       def execute(fns: RestrictedFn[K, AT, Connective])(args: AT): ExtractReturnType[Connective]
 
     object RestrictedFnBuilder:
-      // Builder for ComposedConnective - enforces custom connective constraints
       given connectiveBuilder[
         K,
         AT <: Tuple,
@@ -305,9 +376,7 @@ abstract class RestrictedFnBase:
         ForEachM <: Multiplicity,
         ForAllM <: Multiplicity
       ](using
-        @implicitNotFound(ErrorMsg.compositionForAllFailed)
         evForAll: CheckForAllMultiplicityK[ForAllM, K, AT, RQT],
-        @implicitNotFound(ErrorMsg.compositionForEachFailed)
         evForEach: CheckForEachMultiplicityK[ForEachM, K, AT, RQT],
       ): RestrictedFnBuilder[K, AT, CustomConnective[RQT, ForEachM, ForAllM]] with
         def execute(fns: RestrictedFn[K, AT, CustomConnective[RQT, ForEachM, ForAllM]])(args: AT): ExtractResultTypes[RQT] =
